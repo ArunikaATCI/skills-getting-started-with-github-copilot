@@ -18,7 +18,51 @@ app = FastAPI(title="Mergington High School API",
 current_dir = Path(__file__).parent
 app.mount("/static", StaticFiles(directory=os.path.join(Path(__file__).parent,
           "static")), name="static")
+        @app.on_event("startup")
+        def add_additional_activities():
+            extra_activities = {
+                "Basketball Team": {
+                    "description": "Competitive basketball practices, drills and inter-school games",
+                    "schedule": "Tuesdays and Thursdays, 4:00 PM - 6:00 PM",
+                    "max_participants": 15,
+                    "participants": ["ryan@mergington.edu", "avery@mergington.edu"]
+                },
+                "Soccer Team": {
+                    "description": "Outdoor soccer training and weekend matches",
+                    "schedule": "Mondays, Wednesdays, 4:30 PM - 6:00 PM",
+                    "max_participants": 18,
+                    "participants": ["isabella@mergington.edu", "lucas@mergington.edu"]
+                },
+                "Art Club": {
+                    "description": "Explore drawing, painting, and mixed media projects",
+                    "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
+                    "max_participants": 20,
+                    "participants": ["mia@mergington.edu", "ethan@mergington.edu"]
+                },
+                "Choir": {
+                    "description": "Vocal training and performances for all skill levels",
+                    "schedule": "Thursdays, 3:30 PM - 5:00 PM",
+                    "max_participants": 25,
+                    "participants": ["sophia@mergington.edu", "noah@mergington.edu"]
+                },
+                "Robotics Club": {
+                    "description": "Design and build robots, compete in robotics challenges",
+                    "schedule": "Fridays, 3:30 PM - 5:30 PM",
+                    "max_participants": 12,
+                    "participants": ["oliver@mergington.edu", "ava@mergington.edu"]
+                },
+                "Debate Team": {
+                    "description": "Practice public speaking, argumentation, and competitive debating",
+                    "schedule": "Mondays, 3:30 PM - 5:00 PM",
+                    "max_participants": 16,
+                    "participants": ["liam@mergington.edu", "emma@mergington.edu"]
+                }
+            }
 
+            # Merge without overwriting existing activities
+            for name, info in extra_activities.items():
+                if name not in globals().get("activities", {}):
+                    activities[name] = info
 # In-memory activity database
 activities = {
     "Chess Club": {
@@ -61,6 +105,9 @@ def signup_for_activity(activity_name: str, email: str):
 
     # Get the specific activity
     activity = activities[activity_name]
+# Validate student is not already signed up
+    if email in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student already signed up for this activity")
 
     # Add student
     activity["participants"].append(email)
